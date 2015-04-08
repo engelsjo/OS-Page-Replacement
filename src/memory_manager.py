@@ -6,10 +6,18 @@
 '''
 
 import os
+from pcb import pcb
 
 class memory_manager:
 	def __init__(self):
+		#path to input file to read in
 		self.input_file = "{}/../input3a.data".format(os.path.abspath(os.path.dirname(__file__)))
+		#pcb records for processes
+		self.pcb_records = {}
+		#list of free frames available...defaults to all 16 free
+		self.free_list = [i for i in range(15)]
+		#structure containing the contents of physical memory
+		self.physical_memory = []
 
 	def _read_file(self, file_path):
 		"""
@@ -35,15 +43,32 @@ class memory_manager:
 		Main logic of management will occur here
 		"""
 		file_contents = self._read_file(self.input_file)
-		for line in file_contents:
+		for line in file_contents: #parse the data file
 			line_contents = line.split()
-			if len(line_contents) == 2:
+			if len(line_contents) == 2: #retrieve and format the pid and page number
 				pid = line_contents[0]
 				mem_bin_addr = line_contents[1]
 				page_nbr = self._convert_bin_to_decimal(mem_bin_addr)
 				print("{} needs to access page: {}".format(pid, page_nbr))
 			else:
 				raise Exception("Invalid file format. Must be 'pid    address'")
+			if pid not in self.pcb_records: #we havent used this process yet
+				pcb_rec = pcb()
+				pcb_rec.logical_addr_size = page_nbr
+				#TODO: implement replace algorithm... right now we always give first free frame
+				pcb_rec.page_table[page_nbr] = self.free_list[0]
+				pcb_rec.mem_references_made += 1
+				self.pcb_records[pid] = pcb_rec
+			else: #we already have a record for this process and need to update
+				calling_process = self.pcb_records[pid]
+				calling_process.update_size(page_nbr)
+				calling_process.mem_references_made += 1
+				self.pcb_records[pid] = calling_process
+		for pid, pcb_r in self.pcb_records.iteritems():
+			print("Process {} had a logical address space size of {}".format(pid, pcb_r.logical_addr_size))
+			print("Process {} had {} total memory references made".format(pid, pcb_r.mem_references_made))
+
+
 
 
 ############################### Usage and Main ###############################
