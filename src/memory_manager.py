@@ -38,6 +38,36 @@ class memory_manager:
 			ret_val += (curr_bit * pow(2, idx))
 		return ret_val
 
+	def _add_first_time_process(self, pid, page_nbr):
+		"""
+		@param pid: The pid that is being used for the first time 
+		@param page_nbr: The page number the first time process is referencing
+		This is a helper method to manage a process running for first time
+		"""
+		pcb_rec = pcb()
+		pcb_rec.logical_addr_size = page_nbr
+		free_frame = get_frame()
+		pcb_rec.page_table[page_nbr] = free_frame
+		pcb_rec.mem_references_made += 1
+		self.pcb_records[pid] = pcb_rec
+
+	def get_frame():
+		"""
+		Method that will look in free list, otherwise remove, and return a frame
+		"""
+		if len(self.free_list) != 0:
+			return self.free_list.pop(0)
+		else:
+			#we have to boot lru add frame to free list, and return it
+			self.replace_by_lru()
+			return self.free_list.pop(0)
+
+	def replace_by_lru(self):
+		"""
+		TODO: implement this bad boy
+		"""
+
+
 	def manage(self):
 		"""
 		Main logic of management will occur here
@@ -53,12 +83,7 @@ class memory_manager:
 			else:
 				raise Exception("Invalid file format. Must be 'pid    address'")
 			if pid not in self.pcb_records: #we havent used this process yet
-				pcb_rec = pcb()
-				pcb_rec.logical_addr_size = page_nbr
-				#TODO: implement replace algorithm... right now we always give first free frame
-				pcb_rec.page_table[page_nbr] = self.free_list[0]
-				pcb_rec.mem_references_made += 1
-				self.pcb_records[pid] = pcb_rec
+				self._add_first_time_process(pid, page_nbr)
 			else: #we already have a record for this process and need to update
 				calling_process = self.pcb_records[pid]
 				calling_process.update_size(page_nbr)
