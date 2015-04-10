@@ -16,9 +16,9 @@ class memory_manager:
 		#pcb records for processes
 		self.pcb_records = {}
 		#list of free frames available...defaults to all 16 free
-		self.free_list = [i for i in range(15)]
+		self.free_list = [i for i in range(16)]
 		#structure containing the contents of physical memory
-		self.physical_memory = [-1 for i in range(15)]
+		self.physical_memory = [-1 for i in range(16)]
 
 	def _read_file(self, file_path):
 		"""
@@ -162,11 +162,24 @@ class memory_manager:
 		self._printProgramExecution()
 		
 	def _printProgramExecution(self):
-		for pid, pcb_r in self.pcb_records.iteritems():
+		# print out physical memory contents
+		print("############ PHYSICAL MEMORY ############\n")
+		for frame in self.physical_memory:
+			print(frame)
+		#print out the logical address (page tables)
+		print("\n############ LOGICAL ADDRESS SPACES ############")
+		for pid, pcb_r in sorted(self.pcb_records.iteritems()):
+			page_table_to_print = pcb_r.page_table
+			print("Page table for Process: {}".format(pid))
+			for page, page_info in sorted(page_table_to_print.iteritems()):
+				print("Page: {} Info: {}".format(page, page_info))
+			print("\n")
+
+
+		for pid, pcb_r in sorted(self.pcb_records.iteritems()):
 			print("Process {} had a logical address space size of {}".format(pid, pcb_r.logical_addr_size))
 			print("Process {} had {} total memory references made".format(pid, pcb_r.mem_references_made))
 			print("Process {} had {} total memory faults".format(pid, pcb_r.number_of_faults))
-		print("{}".format(self.physical_memory))
 
 
 
