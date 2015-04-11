@@ -33,6 +33,8 @@ class memory_manager:
 		self.in_progress = False
 		#index "pointer" to current reference... used by step button
 		self.curr_ref_index = 0
+		#status of the manager
+		self.status = "Simulation Status: Welcome to VM Simulation"
 
 	def _read_file(self, file_path):
 		"""
@@ -72,6 +74,7 @@ class memory_manager:
 		pcb_rec.number_of_faults += 1
 		#add the pcb to the pcb records
 		self.pcb_records[pid] = pcb_rec
+		self.status = "Simulation Status: {} requested page {}. Page Fault occurred. Frame {} granted".format(pid, page_nbr, free_frame)
 
 	def _handle_first_page_ref(self, pid, page_nbr):
 		"""
@@ -91,6 +94,7 @@ class memory_manager:
 		pcb_rec.update_page_tbl(page_nbr, free_frame, datetime.now(), True)
 		#replace the updated pcb in the pcb records
 		self.pcb_records[pid] = pcb_rec
+		self.status = "Simulation Status: {} requested page {}. Page Fault occurred. Frame {} granted".format(pid, page_nbr, free_frame)
 
 	def _handle_page_reference(self, pid, page_nbr):
 		"""
@@ -105,6 +109,7 @@ class memory_manager:
 		if pcb_page_table[page_nbr][2] == True: #resident in RAM as of now
 			#update the reference time
 			pcb_rec.page_table[page_nbr][1] = datetime.now()
+			self.status = "Simulation Status: {} requested page {}. This page is already in memory".format(pid, page_nbr)
 		else: #PAGE FAULT!!!!
 			print("PAGE FAULT!!!")
 			pcb_rec.number_of_faults += 1
@@ -112,7 +117,8 @@ class memory_manager:
 			#add the page to physical memory
 			self.physical_memory[free_frame] = (pid, page_nbr)
 			pcb_rec.update_page_tbl(page_nbr, free_frame, datetime.now(), True)
-			#replace the updated pcb in the pcb records
+			self.status = "Simulation Status: {} requested page {}. Page Fault occurred. Frame {} granted".format(pid, page_nbr, free_frame)
+		#replace the updated pcb in the pcb records
 		self.pcb_records[pid] = pcb_rec
 
 	def get_frame(self):
@@ -207,6 +213,7 @@ class memory_manager:
 			self._manage(self.file_contents[i])
 		self.curr_ref_index = len(self.file_contents) #move ref pointer to end of file
 		self.printProgramExecution()
+		self.status = "Simulation Status: Simulation COMPLETE, reset and run again!"
 
 	def runToNextStep(self):
 		"""
@@ -216,8 +223,25 @@ class memory_manager:
 			line = self.file_contents[self.curr_ref_index]
 			self._manage(line)
 			self.curr_ref_index += 1
+			if self.curr_ref_index == len(self.file_contents):
+				self.status = "Simulation Status: Simulation COMPLETE, reset and run again!"
 		except Exception as e:
 			raise Exception("You have reached the end of the file")
+
+	def runToFault(self):
+		"""
+		Method to execute until the next page fault
+		"""
+		complete = False
+		while("Page Fault" not in self.status):
+			line = self.file_contents[self.curr_ref_index]
+			self._manage(line)
+			self.curr_ref_index += 1
+			if self.curr_ref_index == len(self.file_contents):
+				complete = True
+				break;
+		if complete:
+			self.status = "Simulation Status: Simulation COMPLETE, reset and run again!"
 
 
 ############################### Usage and Main ###############################
