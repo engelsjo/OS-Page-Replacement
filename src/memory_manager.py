@@ -13,12 +13,26 @@ class memory_manager:
 	def __init__(self):
 		#path to input file to read in
 		self.input_file = "{}/../input3a.data".format(os.path.abspath(os.path.dirname(__file__)))
+		#the contents of the data file
+		self.file_contents = self._read_file(self.input_file)
+		#set up data-structures etc...
+		self.init_manager()
+
+	def init_manager(self):
+		"""
+		@param self: The context of the caller
+		Public method used to init and or reset the manager
+		"""
 		#pcb records for processes
 		self.pcb_records = {}
 		#list of free frames available...defaults to all 16 free
 		self.free_list = [i for i in range(16)]
 		#structure containing the contents of physical memory
 		self.physical_memory = [-1 for i in range(16)]
+		#flag indicating if the manager is in progress
+		self.in_progress = False
+		#index "pointer" to current reference... used by step button
+		self.curr_ref_index = 0
 
 	def _read_file(self, file_path):
 		"""
@@ -45,6 +59,7 @@ class memory_manager:
 		@param page_nbr: The page number the first time process is referencing
 		This is a helper method to manage a process running for first time
 		"""
+		print("PAGE FAULT!!!")
 		#create a new pcb for the process
 		pcb_rec = pcb()
 		pcb_rec.update_size(page_nbr)
@@ -63,6 +78,7 @@ class memory_manager:
 		@param pid: The pid of the process with a new page to load in
 		@param page_nbr: The page number to load in
 		"""
+		print("PAGE FAULT!!!")
 		pcb_rec = self.pcb_records[pid]
 		pcb_rec.update_size(page_nbr)
 		pcb_rec.mem_references_made += 1
@@ -90,6 +106,7 @@ class memory_manager:
 			#update the reference time
 			pcb_rec.page_table[page_nbr][1] = datetime.now()
 		else: #PAGE FAULT!!!!
+			print("PAGE FAULT!!!")
 			pcb_rec.number_of_faults += 1
 			free_frame = self.get_frame()
 			#add the page to physical memory
@@ -136,32 +153,33 @@ class memory_manager:
 		#set the resident bit of the removed page to False
 		self.pcb_records[lru[0]].page_table[lru[1]][2] = False
 
-	def manage(self):
+	def _manage(self, line):
 		"""
-		Main logic of management will occur here
+		@param line: The reference line in the file
+		Method that simulates the reference of a line in the file
 		"""
-		file_contents = self._read_file(self.input_file)
-		for line in file_contents: #parse the data file
-			line_contents = line.split()
-			if len(line_contents) == 2: #retrieve and format the pid and page number
-				pid = line_contents[0]
-				mem_bin_addr = line_contents[1]
-				page_nbr = self._convert_bin_to_decimal(mem_bin_addr)
-				print("{} needs to access page: {}".format(pid, page_nbr))
-			else:
-				raise Exception("Invalid file format. Must be 'pid    address'")
-			if pid not in self.pcb_records:
-				#we havent used this process yet 
-				self._add_first_time_process(pid, page_nbr)
-			elif page_nbr not in self.pcb_records[pid].page_table:
-				#we havent loaded this page of the process in yet
-				self._handle_first_page_ref(pid, page_nbr)
-			else:
-				#we already have a record for this process and page and need to manage it
-				self._handle_page_reference(pid, page_nbr)
-		self._printProgramExecution()
+		line_contents = line.split()
+		if len(line_contents) == 2: #retrieve and format the pid and page number
+			pid = line_contents[0]
+			mem_bin_addr = line_contents[1]
+			page_nbr = self._convert_bin_to_decimal(mem_bin_addr)
+			print("{} needs to access page: {}".format(pid, page_nbr))
+		else:
+			raise Exception("Invalid file format. Must be 'pid    address'")
+		if pid not in self.pcb_records:
+			#we havent used this process yet 
+			self._add_first_time_process(pid, page_nbr)
+		elif page_nbr not in self.pcb_records[pid].page_table:
+			#we havent loaded this page of the process in yet
+			self._handle_first_page_ref(pid, page_nbr)
+		else:
+			#we already have a record for this process and page and need to manage it
+			self._handle_page_reference(pid, page_nbr)
 		
-	def _printProgramExecution(self):
+		
+	############################   Public API METHODS   ########################  
+
+	def printProgramExecution(self):
 		# print out physical memory contents
 		print("############ PHYSICAL MEMORY ############\n")
 		for frame in self.physical_memory:
@@ -181,6 +199,25 @@ class memory_manager:
 			print("Process {} had {} total memory references made".format(pid, pcb_r.mem_references_made))
 			print("Process {} had {} total memory faults".format(pid, pcb_r.number_of_faults))
 
+	def runToCompletion(self):
+		"""
+		Method to run the program to completion
+		"""
+		for i in range(self.curr_ref_index, len(self.file_contents)): #parse the data file
+			self._manage(self.file_contents[i])
+		self.curr_ref_index = len(self.file_contents) #move ref pointer to end of file
+		self.printProgramExecution()
+
+	def runToNextStep(self):
+		"""
+		Method to execute the next memory reference...
+		"""
+		try:
+			line = self.file_contents[self.curr_ref_index]
+			self._manage(line)
+			self.curr_ref_index += 1
+		except Exception as e:
+			raise Exception("You have reached the end of the file")
 
 
 ############################### Usage and Main ###############################
