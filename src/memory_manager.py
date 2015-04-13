@@ -150,7 +150,7 @@ class memory_manager:
 		#find the oldest / lru of the frames in memory
 		lru = frames_in_memory[0]
 		for frame in frames_in_memory:
-			if frame[1] < lru[1]:
+			if frame[3] < lru[3]:
 				lru = frame
 		#remove lru frame from physical memory
 		self.physical_memory[lru[2]] = ""

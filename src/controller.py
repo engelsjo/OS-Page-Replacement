@@ -156,10 +156,10 @@ def init_physicalm_view():
 	#add table cells here
 	for i in range(16):
 		if i < 10:
-			pid_lab = ttk.Label(phys_mem_labels_frame, text="{}:           -1,      -1".format(i), relief=SUNKEN)
+			pid_lab = ttk.Label(phys_mem_labels_frame, text="{}:             ,        ".format(i), relief=SUNKEN)
 			pid_lab.grid(column=0, row=i+2, sticky=W, pady=3, padx=(0,25))
 		else:
-			pid_lab = ttk.Label(phys_mem_labels_frame, text="{}:         -1,      -1".format(i), relief=SUNKEN)
+			pid_lab = ttk.Label(phys_mem_labels_frame, text="{}:           ,        ".format(i), relief=SUNKEN)
 			pid_lab.grid(column=0, row=i+2, sticky=W, pady=3, padx=(0,25))
 		#add for later update reference
 		table_labels.append(pid_lab)
@@ -167,9 +167,9 @@ def init_physicalm_view():
 def reset_pmem_view():
 	for i in range(16):
 		if i < 10:
-			table_labels[i]['text'] = "{}:           -1,      -1".format(i)
+			table_labels[i]['text'] = "{}:             ,        ".format(i)
 		else:
-			table_labels[i]['text'] = "{}:         -1,      -1".format(i)
+			table_labels[i]['text'] = "{}:           ,        ".format(i)
 
 
 #######################   SET UP PROCESS TABLES    #######################
@@ -183,10 +183,10 @@ def init_ptables_view():
 
 		for j in range(16): #set up logical addr space
 			if j < 10:
-				page_lab = ttk.Label(process_table_frames[i], text="{}:     -1,      -1,        00:00:00".format(j), relief=SUNKEN)
+				page_lab = ttk.Label(process_table_frames[i], text="{}:       ,        ,        00:00:00".format(j), relief=SUNKEN)
 				page_lab.grid(column=i+1, row=j+2, sticky=W, pady=3, padx=(0,25))
 			else:
-				page_lab = ttk.Label(process_table_frames[i], text="{}:   -1,      -1,        00:00:00".format(j), relief=SUNKEN)
+				page_lab = ttk.Label(process_table_frames[i], text="{}:     ,        ,        00:00:00".format(j), relief=SUNKEN)
 				page_lab.grid(column=i+1, row=j+2, sticky=W, pady=3, padx=(0,25))
 			#add for later update reference
 			if 'P{}:'.format(i+1) not in process_tables_labels.keys():
@@ -198,9 +198,9 @@ def reset_ptbl_view():
 	for i in range(5):
 		for j in range(16):
 			if j < 10:
-				process_tables_labels['P{}:'.format(i+1)][j]['text'] = "{}:     -1,      -1,        00:00:00".format(j)
+				process_tables_labels['P{}:'.format(i+1)][j]['text'] = "{}:       ,        ,        00:00:00".format(j)
 			else:
-				process_tables_labels['P{}:'.format(i+1)][j]['text'] = "{}:   -1,      -1,        00:00:00".format(j)
+				process_tables_labels['P{}:'.format(i+1)][j]['text'] = "{}:     ,        ,        00:00:00".format(j)
 
 init_physicalm_view()
 init_ptables_view()
