@@ -33,6 +33,8 @@ class memory_manager:
 		self.in_progress = False
 		#index "pointer" to current reference... used by step button
 		self.curr_ref_index = 0
+		#last victim
+		self.last_vict = ""
 		#status of the manager
 		self.status = "Simulation Status: Welcome to VM Simulation"
 
@@ -109,7 +111,7 @@ class memory_manager:
 		if pcb_page_table[page_nbr][2] == True: #resident in RAM as of now
 			#update the reference time
 			pcb_rec.page_table[page_nbr][1] = datetime.now()
-			self.status = "Simulation Status: {} requested page {}. This page is already in memory".format(pid, page_nbr)
+			self.status = "Simulation Status: {} requested page {}. This page is already in memory frame {}".format(pid, page_nbr, pcb_rec.page_table[page_nbr][0])
 		else: #PAGE FAULT!!!!
 			print("PAGE FAULT!!!")
 			pcb_rec.number_of_faults += 1
@@ -152,6 +154,8 @@ class memory_manager:
 		for frame in frames_in_memory:
 			if frame[3] < lru[3]:
 				lru = frame
+		#set last lru victim
+		self.last_vict = (lru[0], lru[1])
 		#remove lru frame from physical memory
 		self.physical_memory[lru[2]] = ""
 		#add free frame to free list
@@ -201,7 +205,7 @@ class memory_manager:
 
 
 		for pid, pcb_r in sorted(self.pcb_records.iteritems()):
-			print("Process {} had a logical address space size of {}".format(pid, pcb_r.logical_addr_size))
+			print("Process {} had a logical address space size of {}".format(pid, pcb_r.logical_addr_size+1))
 			print("Process {} had {} total memory references made".format(pid, pcb_r.mem_references_made))
 			print("Process {} had {} total memory faults".format(pid, pcb_r.number_of_faults))
 
@@ -225,6 +229,7 @@ class memory_manager:
 			self.curr_ref_index += 1
 			if self.curr_ref_index == len(self.file_contents):
 				self.status = "Simulation Status: Simulation COMPLETE, reset and run again!"
+				self.printProgramExecution()
 		except Exception as e:
 			raise Exception("You have reached the end of the file")
 
@@ -241,6 +246,7 @@ class memory_manager:
 				complete = True
 				break;
 		if complete:
+			self.printProgramExecution()
 			self.status = "Simulation Status: Simulation COMPLETE, reset and run again!"
 
 
